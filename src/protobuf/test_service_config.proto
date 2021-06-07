@@ -28,8 +28,11 @@ message ServiceConfig {
     // service hostname (DNS name) or IP
     string fqdnOrIP = 2;
 
-    // port where the service listens for incoming requests
-    string port = 3;
+    // port where the service listens for incoming REST API requests
+    string apiPort = 3;
+
+    // port where the service listens for incoming RPC requests
+    string rpcPort = 4;
 }
 
 // Configuration to connect to a SQL store

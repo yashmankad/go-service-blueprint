@@ -7,11 +7,13 @@ package server
 
 import (
 	"context"
+	"net"
 	"net/http"
 	"sync"
 	"time"
 
 	log "github.com/sirupsen/logrus"
+	"google.golang.org/grpc"
 
 	proto "test_service/protobuf/generated"
 	"test_service/router"
@@ -22,6 +24,12 @@ import (
 type Server struct {
 	// api server object
 	ApiSrvr *http.Server
+
+	// rpc server object (RPCs are implemented through gRPC)
+	RpcSrvr *grpc.Server
+
+	// XXX: needed due to some quirky grpc behavior (https://github.com/grpc/grpc-go/issues/3794)
+	proto.UnimplementedTestServiceRPCServer
 
 	// logger object to log with additional service context
 	ContextLogger *log.Entry
@@ -68,34 +76,42 @@ func (s *Server) Run() error {
 		return err
 	}
 
-	s.serverLock.Unlock()
-
-	// start api server. this should be done towards the end since it is a blocking call
-	s.wg.Add(1)
+	// start api server. this is done in a background thread since it is a blocking call
+	s.wg.Add(2)
 	go s.goRunAPIServer()
+	go s.goRunRPCServer()
 
 	s.running = true
 	s.ContextLogger.Info("server started successfully")
 
+	// release the lock so that background threads don't starve (in case they need the lock too)
+	s.serverLock.Unlock()
 	s.wg.Wait()
 	s.serverLock.Lock()
+
+	// if control comes here, it means both rest and rpc servers have terminated
+	// mark the server instance as not running
+	s.running = false
 
 	return nil
 }
 
 // gracefully close a server connection and stop the service instance
+// best effort...currently does not return any error
 func (s *Server) Close() error {
 	s.running = false
-	// close the api server
+	// close/stop the api server
 	// the context is informs the server it has 5 seconds to finish
 	// the request it is currently handling
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
 	if err := s.ApiSrvr.Shutdown(ctx); err != nil {
-		s.ContextLogger.Fatal("failed to shutdown api server, error:", err)
-		return err
+		s.ContextLogger.Error("failed to shutdown api server, error:", err)
 	}
+
+	// stop the grpc server
+	s.RpcSrvr.Stop()
 
 	return nil
 }
@@ -108,9 +124,6 @@ func (s *Server) initialize() error {
 
 // initializes and starts a REST API server
 func (s *Server) goRunAPIServer() {
-	s.serverLock.Lock()
-	defer s.serverLock.Unlock()
-
 	r, err := router.NewRouter()
 	if err != nil {
 		s.ContextLogger.Error("failed to initialize api router")
@@ -119,7 +132,7 @@ func (s *Server) goRunAPIServer() {
 	}
 
 	apiSrvr := &http.Server{
-		Addr:    ":" + s.config.Service.Port,
+		Addr:    ":" + s.config.Service.ApiPort,
 		Handler: r,
 	}
 
@@ -129,10 +142,25 @@ func (s *Server) goRunAPIServer() {
 
 	// start the api server
 	if err := apiSrvr.ListenAndServe(); err != nil {
-		s.ContextLogger.Info("error running api server: %s\n", err)
+		s.ContextLogger.Fatal("error running api server: %s\n", err)
 		s.wg.Done()
 		return
 	}
 
 	s.wg.Done()
+}
+
+func (s *Server) goRunRPCServer() {
+	listener, err := net.Listen("tcp", "localhost:"+s.config.Service.RpcPort)
+	if err != nil {
+		s.ContextLogger.Fatal("failed to listen on rpc port: %v", err)
+	}
+
+	grpcServer := grpc.NewServer()
+	proto.RegisterTestServiceRPCServer(grpcServer, s)
+	if err := grpcServer.Serve(listener); err != nil {
+		s.ContextLogger.Fatal("error running rpc server on port %s, err: %s\n", s.config.Service.RpcPort, err)
+		s.wg.Done()
+		return
+	}
 }

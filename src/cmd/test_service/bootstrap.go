@@ -57,7 +57,8 @@ func bootstrap(configPath string) (*proto.Config, error) {
 		Service: &proto.ServiceConfig{
 			Name:     config.Service.Name,
 			FqdnOrIP: config.Service.FqdnOrIP,
-			Port:     config.Service.Port,
+			ApiPort:  config.Service.ApiPort,
+			RpcPort:  config.Service.RpcPort,
 		},
 		Host: &proto.HostConfig{
 			Uuid:         uuid.New().String(),

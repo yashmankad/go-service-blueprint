@@ -4,7 +4,8 @@ type Config struct {
 	Service struct {
 		Name         string `yaml:"name"`
 		FqdnOrIP     string `yaml:"fqdnOrIP"`
-		Port         string `yaml:"port"`
+		ApiPort      string `yaml:"restPort"`
+		RpcPort      string `yaml:"rpcPort"`
 		LogFile      string `yaml:"log_file"`
 		LoggingLevel string `yaml:"logging_level"`
 	} `yaml:"service"`

@@ -1,0 +1,18 @@
+// RPC and request/response protocol buffer definitions for service
+
+syntax = "proto3";
+
+package test_service;
+option go_package = "./";
+
+message PingRequest {
+    // empty request
+}
+
+message PingResponse {
+    string message = 1;
+}
+
+service TestServiceRPC {
+    rpc Ping(PingRequest) returns (PingResponse) {}
+}

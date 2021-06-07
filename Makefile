@@ -29,9 +29,10 @@ fmt:
 # builds protocol buffer definitions and generates Go bindings for them
 protobuf:
 	@go get -u github.com/golang/protobuf/protoc-gen-go
+	@go get -u google.golang.org/grpc/cmd/protoc-gen-go-grpc
 	@mkdir -p src/protobuf/generated
 	@for protofile in $(PROTOBUF_FILES); do \
-		protoc -I=./src/protobuf --go_out=./src/protobuf/generated $$protofile; \
+		protoc -I=./src/protobuf --go_out=./src/protobuf/generated --go-grpc_out=./src/protobuf/generated $$protofile; \
 	done
 
 # builds everything - protocol buffers, Go binaries and formats the code
