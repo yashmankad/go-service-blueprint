@@ -1,0 +1,15 @@
+service:
+  name: "test_service"
+  fqdnOrIP: "127.0.0.1"
+  port: "8000"
+  log_file: "test_service.log"
+  logging_level: "info"
+sql_db:
+  fqdnOrIP: "127.0.0.1"
+  port: "5432"
+  username: "postgres"
+  password: ""
+  db_name: "test-db"
+kvstore:
+  fqdnOrIP: "127.0.0.1"
+  port: "2379"

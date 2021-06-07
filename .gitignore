@@ -1,0 +1,12 @@
+# binaries
+bin
+pkg
+testoutput
+tmp
+
+# auto generated files
+src/protobuf/generated
+
+# IDE generated files
+.DS_Store
+.idea/

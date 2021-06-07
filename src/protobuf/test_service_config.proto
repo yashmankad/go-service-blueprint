@@ -1,0 +1,70 @@
+// Protocol buffer definitions for service config
+
+syntax = "proto3";
+
+package test_service;
+option go_package = "./";
+
+// Service config definition
+message Config {
+    // defines service properties name, logging and REST/RPC endpoints
+    ServiceConfig service = 1;
+
+    // configuration for the service to connect to a SQL datastore (connect string, username, password)
+    SQLDbConfig sql_db = 2;
+
+    // configuration for the service to connect to a KV store
+    KVStoreConfig kvstore = 3;
+
+    // configuration for this specific service instance (uuid, hostname, ip) 
+    HostConfig host = 4;
+}
+
+// Service configuration
+message ServiceConfig {
+    // service name
+    string name = 1;
+
+    // service hostname (DNS name) or IP
+    string fqdnOrIP = 2;
+
+    // port where the service listens for incoming requests
+    string port = 3;
+}
+
+// Configuration to connect to a SQL store
+message SQLDbConfig {
+    // db hostname (DNS name) or IP
+    string fqdnOrIP = 1;
+
+    // port where the db listens for incoming request
+    string port = 2;
+
+    // database username
+    string username = 3;
+
+    // database password
+    string password = 4;
+
+    // name of database to access
+    string db_name = 5;
+}
+
+// Configuration to connect to a KV store
+message KVStoreConfig {
+    // kvstore hostname (DNS name) or IP
+    string fqdnOrIP = 1;
+
+    // port where the kvstore listens for incoming request
+    string port = 2;
+}
+
+// Configuration related to this specific service instance
+message HostConfig {
+    // uuid for this service instance
+    string uuid = 1;
+
+    // unique instance name for this service instance (need not be FQDN)
+    string instance_name = 2;
+}
+
