@@ -3,6 +3,8 @@ service:
   fqdnOrIP: "127.0.0.1"
   apiPort: "8000"
   rpcPort: "8001"
+logging:
+  log_dir: ""
   log_file: "test_service.log"
   logging_level: "info"
 sql_db:

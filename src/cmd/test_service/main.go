@@ -27,10 +27,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	log.WithFields(log.Fields{
-		"fqdn":     protoConfig.Service.FqdnOrIP,
-		"instance": protoConfig.Host.InstanceName,
-	}).Info("service bootstrap successful")
+	log.Info("service bootstrap successful")
 
 	server, err := server.NewServer(protoConfig)
 	if err != nil {

@@ -10,14 +10,17 @@ message Config {
     // defines service properties name, logging and REST/RPC endpoints
     ServiceConfig service = 1;
 
+    // service logging config
+    LoggingConfig logging = 2;
+
     // configuration for the service to connect to a SQL datastore (connect string, username, password)
-    SQLDbConfig sql_db = 2;
+    SQLDbConfig sql_db = 3;
 
     // configuration for the service to connect to a KV store
-    KVStoreConfig kvstore = 3;
+    KVStoreConfig kvstore = 4;
 
     // configuration for this specific service instance (uuid, hostname, ip) 
-    HostConfig host = 4;
+    HostConfig host = 5;
 }
 
 // Service configuration
@@ -33,6 +36,18 @@ message ServiceConfig {
 
     // port where the service listens for incoming RPC requests
     string rpcPort = 4;
+}
+
+// Logging configuration for service
+message LoggingConfig {
+    // path to logs directory
+    string logDir = 1;
+
+    // log file name
+    string logFile = 2;
+
+    // logging level (debug, info, error, fatal, etc)
+    string loggingLevel = 3;
 }
 
 // Configuration to connect to a SQL store

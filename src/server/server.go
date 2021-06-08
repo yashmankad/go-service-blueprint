@@ -7,8 +7,11 @@ package server
 
 import (
 	"context"
+	"fmt"
 	"net"
 	"net/http"
+	"os"
+	"path/filepath"
 	"sync"
 	"time"
 
@@ -19,17 +22,30 @@ import (
 	"test_service/router"
 )
 
+// globals
+var (
+	logLevels = map[string]log.Level{
+		"trace": log.TraceLevel,
+		"debug": log.DebugLevel,
+		"info":  log.InfoLevel,
+		"warn":  log.WarnLevel,
+		"error": log.ErrorLevel,
+		"fatal": log.FatalLevel,
+		"panic": log.PanicLevel,
+	}
+)
+
 // Server object for the service
 // contains handlers to api/rpc server, db object, server config, logger, etc
 type Server struct {
+	// service instance configuration
+	Config *proto.Config
+
 	// api server object
 	ApiSrvr *http.Server
 
 	// rpc server object (RPCs are implemented through gRPC)
 	RpcSrvr *grpc.Server
-
-	// XXX: needed due to some quirky grpc behavior (https://github.com/grpc/grpc-go/issues/3794)
-	proto.UnimplementedTestServiceRPCServer
 
 	// logger object to log with additional service context
 	ContextLogger *log.Entry
@@ -43,8 +59,8 @@ type Server struct {
 	// flag to indicate if service is up/running
 	running bool
 
-	// service instance configuration
-	config *proto.Config
+	// XXX: needed due to some quirky grpc behavior (https://github.com/grpc/grpc-go/issues/3794)
+	proto.UnimplementedTestServiceRPCServer
 
 	// XXX: add connection objects for databases, kvstores, queues, etc
 }
@@ -52,15 +68,13 @@ type Server struct {
 // initializes a new server object
 // the object also contains a context logger to log with additional service context
 func NewServer(config *proto.Config) (*Server, error) {
-	serverObj := &Server{config: config}
+	serverObj := &Server{Config: config}
 
-	// create a logger object that logs with added context (instanceName, ip, etc)
-	contextLogger := log.WithFields(log.Fields{
-		"fqdn":     config.Service.FqdnOrIP,
-		"instance": config.Host.InstanceName,
-	})
+	if err := serverObj.configureLogger(); err != nil {
+		log.Errorf("failed to initialize logger")
+		return nil, err
+	}
 
-	serverObj.ContextLogger = contextLogger
 	return serverObj, nil
 }
 
@@ -116,6 +130,21 @@ func (s *Server) Close() error {
 	return nil
 }
 
+// waits for the server to come up. returns error if server does not boot up within the requested timeout
+func (s *Server) WaitForServerBootup(timeout time.Duration) error {
+	currTime := time.Now()
+	endTime := currTime.Add(timeout)
+	for time.Now().Before(endTime) {
+		if s.getServerStatus() {
+			return nil
+		}
+
+		time.Sleep(10 * time.Millisecond)
+	}
+
+	return fmt.Errorf("server bootup timed out")
+}
+
 // initializes connections to datastore, KV store, queues, etc
 func (s *Server) initialize() error {
 	// XXX: initialize other connection objects like datastore, kvstore and queues
@@ -132,7 +161,7 @@ func (s *Server) goRunAPIServer() {
 	}
 
 	apiSrvr := &http.Server{
-		Addr:    ":" + s.config.Service.ApiPort,
+		Addr:    ":" + s.Config.Service.ApiPort,
 		Handler: r,
 	}
 
@@ -150,8 +179,9 @@ func (s *Server) goRunAPIServer() {
 	s.wg.Done()
 }
 
+// starts an RPC server for incoming requests on port requested in service config
 func (s *Server) goRunRPCServer() {
-	listener, err := net.Listen("tcp", "localhost:"+s.config.Service.RpcPort)
+	listener, err := net.Listen("tcp", "localhost:"+s.Config.Service.RpcPort)
 	if err != nil {
 		s.ContextLogger.Fatal("failed to listen on rpc port: %v", err)
 	}
@@ -159,8 +189,65 @@ func (s *Server) goRunRPCServer() {
 	grpcServer := grpc.NewServer()
 	proto.RegisterTestServiceRPCServer(grpcServer, s)
 	if err := grpcServer.Serve(listener); err != nil {
-		s.ContextLogger.Fatal("error running rpc server on port %s, err: %s\n", s.config.Service.RpcPort, err)
+		s.ContextLogger.Fatal("error running rpc server on port %s, err: %s\n", s.Config.Service.RpcPort, err)
 		s.wg.Done()
 		return
 	}
+}
+
+// configure logging parameters for the server/service
+func (s *Server) configureLogger() error {
+	// form the log dir and filepath
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		log.Fatalf("failed to fetch user home dir, error: %v", err)
+		return err
+	}
+
+	// if log directory does not exist, create it
+	logDir := s.Config.Logging.LogFile
+	if logDir == "" {
+		logDir = filepath.Join(homeDir, "logs")
+	}
+
+	if _, err := os.Stat(logDir); os.IsNotExist(err) {
+		if err := os.MkdirAll(logDir, os.ModePerm); err != nil {
+			log.Fatalf("failed to create log directory, error: %v", err)
+			return err
+		}
+	}
+
+	logFile := filepath.Join(logDir, s.Config.Logging.LogFile)
+	fh, err := os.OpenFile(logFile, os.O_CREATE|os.O_WRONLY|os.O_APPEND, os.ModePerm)
+	if err != nil {
+		log.Errorf("failed to log to file, using default stderr, error: %v", err)
+		return err
+	}
+
+	log.SetOutput(fh)
+	log.SetLevel(logLevels[s.Config.Logging.LoggingLevel])
+	log.SetFormatter(&log.TextFormatter{
+		FullTimestamp: true,
+	})
+
+	// create a logger object that logs with added context (instanceName, ip, etc)
+	contextLogger := log.WithFields(log.Fields{
+		"fqdn":     s.Config.Service.FqdnOrIP,
+		"instance": s.Config.Host.InstanceName,
+	})
+
+	s.ContextLogger = contextLogger
+
+	// toggle for debugging
+	log.SetReportCaller(false)
+
+	return nil
+}
+
+// safely fetch current server status
+func (s *Server) getServerStatus() bool {
+	s.serverLock.Lock()
+	status := s.running
+	s.serverLock.Unlock()
+	return status
 }

@@ -2,13 +2,16 @@ package server
 
 type Config struct {
 	Service struct {
-		Name         string `yaml:"name"`
-		FqdnOrIP     string `yaml:"fqdnOrIP"`
-		ApiPort      string `yaml:"restPort"`
-		RpcPort      string `yaml:"rpcPort"`
+		Name     string `yaml:"name"`
+		FqdnOrIP string `yaml:"fqdnOrIP"`
+		ApiPort  string `yaml:"restPort"`
+		RpcPort  string `yaml:"rpcPort"`
+	} `yaml:"service"`
+	Logging struct {
+		LogDir       string `yaml:"log_dir"`
 		LogFile      string `yaml:"log_file"`
 		LoggingLevel string `yaml:"logging_level"`
-	} `yaml:"service"`
+	} `yaml:"logging"`
 	SQLDb struct {
 		FqdnOrIP string `yaml:"fqdnOrIP"`
 		Port     string `yaml:"port"`
