@@ -7,6 +7,9 @@ tmp
 # auto generated files
 src/protobuf/generated
 
+# unit test output (logs, etc)
+testout
+
 # IDE generated files
 .DS_Store
 .idea/

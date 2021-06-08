@@ -1,8 +1,9 @@
 // This class provides methods to initialize a unit testcase and tear it down
 
-package common
+package util
 
 import (
+	"flag"
 	"fmt"
 	"math/rand"
 	"os"
@@ -19,31 +20,28 @@ type Test struct {
 	TestDir string
 }
 
+// globals
+var testDir = flag.String("test_dir", "", "Directory for test files and logs")
+
 func TestInit(testName string) (*Test, error) {
-	// test logs get written to $HOME/testout/<testcase-name-randomId>
+	// test logs get written to the requested <testDir>/<testcase-name-randomId>
+	// if the requested testDir is empty we place the logs under $HOMEDIR/testout/<testcase-name-randomId>
 	// create this directory
 
-	// fetch the users home directory
-	homeDir, err := os.UserHomeDir()
-	if err != nil {
-		log.Fatalf("failed to fetch user home dir, error: %v", err)
-		return nil, err
-	}
-
 	randomNum := rand.New(rand.NewSource(time.Now().UnixNano())).Intn(256)
-	testDir := filepath.Join(homeDir, "testout", fmt.Sprintf("%s-%d", testName, randomNum))
-	if _, err := os.Stat(testDir); os.IsNotExist(err) {
-		if err := os.MkdirAll(testDir, os.ModePerm); err != nil {
+	*testDir = filepath.Join(*testDir, fmt.Sprintf("%s-%d", testName, randomNum))
+	if _, err := os.Stat(*testDir); os.IsNotExist(err) {
+		if err := os.MkdirAll(*testDir, os.ModePerm); err != nil {
 			log.Fatalf("failed to create test directory, error: %v", err)
 			return nil, err
 		}
 	}
 
-	return &Test{TestDir: testDir}, nil
+	return &Test{TestDir: *testDir}, nil
 }
 
 // cleans up the test env, including logs if the test was successful
-func (t *Test) Cleanup(test *testing.T) {
+func (t *Test) TestCleanup(test *testing.T) {
 	if !test.Failed() {
 		if err := os.RemoveAll(t.TestDir); err != nil {
 			test.Errorf("test directory cleanup failed %s: %v", t.TestDir, err)

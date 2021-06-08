@@ -1,14 +1,22 @@
 package router
 
 import (
+	"io"
+	"os"
+
 	"github.com/gin-gonic/gin"
 
-	v1api "test_service/api/v1"
+	"test_service/v1api"
 )
 
 // initializes a new API router based on Gin
 // also registers API endpoints and their handlers with the router
-func NewRouter() (*gin.Engine, error) {
+func NewRouter(fh *os.File) (*gin.Engine, error) {
+	// write API logs to the server's logfile
+	// XXX: if these logs become too chatty, we may have to remove this
+	// 		or write to a separate file (like tomcat's api logs)
+	gin.DefaultWriter = io.MultiWriter(fh)
+
 	r := gin.Default()
 	//gin.SetMode(gin.ReleaseMode)
 

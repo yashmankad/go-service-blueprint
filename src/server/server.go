@@ -47,6 +47,9 @@ type Server struct {
 	// rpc server object (RPCs are implemented through gRPC)
 	RpcSrvr *grpc.Server
 
+	// file handle to server's logs
+	LogFileHandle *os.File
+
 	// logger object to log with additional service context
 	ContextLogger *log.Entry
 
@@ -86,7 +89,7 @@ func (s *Server) Run() error {
 
 	// initialize server instance
 	if err := s.initialize(); err != nil {
-		s.ContextLogger.Error("failed to initialize server instance: %v", err)
+		s.ContextLogger.Errorf("failed to initialize server instance: %v", err)
 		return err
 	}
 
@@ -139,7 +142,7 @@ func (s *Server) WaitForServerBootup(timeout time.Duration) error {
 			return nil
 		}
 
-		time.Sleep(10 * time.Millisecond)
+		time.Sleep(1 * time.Second)
 	}
 
 	return fmt.Errorf("server bootup timed out")
@@ -153,7 +156,9 @@ func (s *Server) initialize() error {
 
 // initializes and starts a REST API server
 func (s *Server) goRunAPIServer() {
-	r, err := router.NewRouter()
+	defer s.wg.Done()
+
+	r, err := router.NewRouter(s.LogFileHandle)
 	if err != nil {
 		s.ContextLogger.Error("failed to initialize api router")
 		s.wg.Done()
@@ -171,42 +176,45 @@ func (s *Server) goRunAPIServer() {
 
 	// start the api server
 	if err := apiSrvr.ListenAndServe(); err != nil {
-		s.ContextLogger.Fatal("error running api server: %s\n", err)
-		s.wg.Done()
+		if err != http.ErrServerClosed {
+			s.ContextLogger.Fatalf("error running api server on port %s, err: %s",
+				s.Config.Service.ApiPort, err)
+		}
+
 		return
 	}
-
-	s.wg.Done()
 }
 
 // starts an RPC server for incoming requests on port requested in service config
 func (s *Server) goRunRPCServer() {
+	s.wg.Done()
 	listener, err := net.Listen("tcp", "localhost:"+s.Config.Service.RpcPort)
 	if err != nil {
-		s.ContextLogger.Fatal("failed to listen on rpc port: %v", err)
+		s.ContextLogger.Fatalf("failed to listen on rpc port: %v", err)
 	}
 
 	grpcServer := grpc.NewServer()
+	s.RpcSrvr = grpcServer
 	proto.RegisterTestServiceRPCServer(grpcServer, s)
 	if err := grpcServer.Serve(listener); err != nil {
-		s.ContextLogger.Fatal("error running rpc server on port %s, err: %s\n", s.Config.Service.RpcPort, err)
-		s.wg.Done()
+		s.ContextLogger.Infof("error running rpc server on port %s, err: %s",
+			s.Config.Service.RpcPort, err)
 		return
 	}
 }
 
 // configure logging parameters for the server/service
 func (s *Server) configureLogger() error {
-	// form the log dir and filepath
-	homeDir, err := os.UserHomeDir()
-	if err != nil {
-		log.Fatalf("failed to fetch user home dir, error: %v", err)
-		return err
-	}
-
 	// if log directory does not exist, create it
-	logDir := s.Config.Logging.LogFile
+	logDir := s.Config.Logging.LogDir
 	if logDir == "" {
+		// form the log dir and filepath
+		homeDir, err := os.UserHomeDir()
+		if err != nil {
+			log.Fatalf("failed to fetch user home dir, error: %v", err)
+			return err
+		}
+
 		logDir = filepath.Join(homeDir, "logs")
 	}
 
@@ -223,6 +231,8 @@ func (s *Server) configureLogger() error {
 		log.Errorf("failed to log to file, using default stderr, error: %v", err)
 		return err
 	}
+
+	s.LogFileHandle = fh
 
 	log.SetOutput(fh)
 	log.SetLevel(logLevels[s.Config.Logging.LoggingLevel])

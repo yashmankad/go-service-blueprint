@@ -44,4 +44,12 @@ all:
 # cleans up existing Go binaries if any
 clean:
 	-rm -rf $(GOBIN)
+
+# unit test target
+test:
+	@mkdir -p $(CURDIR)/testout
+	@for package in $(GO_PACKAGE_LIST); do \
+		cd $(CURDIR)/src; go test -v $$package -test_dir='$(CURDIR)/testout'; cd $(CURDIR); \
+	done
+
 	

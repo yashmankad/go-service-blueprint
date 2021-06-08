@@ -1,6 +1,6 @@
 // v1 API package defines API endpoints and their behavior
 
-package v1
+package v1api
 
 import (
 	"net/http"
