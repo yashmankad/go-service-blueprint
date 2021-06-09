@@ -1,0 +1,38 @@
+# YAML configuration for test service
+
+# k8s deployment config
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: test-service-deployment
+  labels:
+    service_name: test-service
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      service_name: test-service
+  template:
+    metadata:
+      labels:
+        service_name: test-service
+    spec:
+      containers:
+        - name: test-service
+          image: test_service:latest
+          imagePullPolicy: Never
+
+---
+# k8s service config
+kind: Service
+apiVersion: v1
+metadata:
+  name: test-service
+spec:
+  selector:
+    service_name: test-service
+  ports:
+    - protocol: TCP
+      port: 8000
+      nodePort: 30080
+  type: NodePort
