@@ -4,20 +4,20 @@ type Config struct {
 	Service struct {
 		Name     string `yaml:"name"`
 		FqdnOrIP string `yaml:"fqdnOrIP"`
-		ApiPort  string `yaml:"restPort"`
+		ApiPort  string `yaml:"apiPort"`
 		RpcPort  string `yaml:"rpcPort"`
 	} `yaml:"service"`
 	Logging struct {
-		LogDir       string `yaml:"log_dir"`
-		LogFile      string `yaml:"log_file"`
-		LoggingLevel string `yaml:"logging_level"`
+		LogDir       string `yaml:"logDir"`
+		LogFile      string `yaml:"logFile"`
+		LoggingLevel string `yaml:"loggingLevel"`
 	} `yaml:"logging"`
 	SQLDb struct {
 		FqdnOrIP string `yaml:"fqdnOrIP"`
 		Port     string `yaml:"port"`
 		Username string `yaml:"username"`
 		Password string `yaml:"password"`
-		DBName   string `yaml:"db_name"`
+		DBName   string `yaml:"dbName"`
 	} `yaml:"sql_db"`
 	KVStore struct {
 		FqdnOrIP string `yaml:"fqdnOrIP"`

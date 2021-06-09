@@ -71,6 +71,9 @@ type Server struct {
 // initializes a new server object
 // the object also contains a context logger to log with additional service context
 func NewServer(config *proto.Config) (*Server, error) {
+	// print the config before using it to initialize the server
+	log.Infof("service config: %v", config)
+
 	serverObj := &Server{Config: config}
 
 	if err := serverObj.configureLogger(); err != nil {

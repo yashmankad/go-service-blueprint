@@ -4,15 +4,15 @@ service:
   apiPort: "8000"
   rpcPort: "8001"
 logging:
-  log_dir: ""
-  log_file: "test_service.log"
-  logging_level: "info"
+  logDir: ""
+  logFile: "test_service.log"
+  loggingLevel: "info"
 sql_db:
   fqdnOrIP: "127.0.0.1"
   port: "5432"
   username: "postgres"
   password: ""
-  db_name: "test-db"
+  dbName: "test-db"
 kvstore:
   fqdnOrIP: "127.0.0.1"
   port: "2379"

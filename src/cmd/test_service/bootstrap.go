@@ -37,6 +37,11 @@ func bootstrap(configPath string) (*proto.Config, error) {
 			ApiPort:  config.Service.ApiPort,
 			RpcPort:  config.Service.RpcPort,
 		},
+		Logging: &proto.LoggingConfig{
+			LogDir:       config.Logging.LogDir,
+			LogFile:      config.Logging.LogFile,
+			LoggingLevel: config.Logging.LoggingLevel,
+		},
 		Host: &proto.HostConfig{
 			Uuid:         uuid.New().String(),
 			InstanceName: instanceName,
@@ -53,7 +58,7 @@ func getConfig(path string) (*server.Config, error) {
 		return nil, fmt.Errorf("service config file path is empty")
 	}
 
-	log.Printf("reading yaml config from %q", path)
+	log.Infof("reading yaml config from %q", path)
 	data, err := ioutil.ReadFile(path)
 	if err != nil {
 		return nil, err

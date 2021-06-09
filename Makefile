@@ -7,6 +7,8 @@ export PATH=/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:$(GOBIN)
 .DEFAULT_GOAL := all
 .PHONY: all build fmt clean
 
+UNAME=$(shell uname)
+
 # collection of Go packages and binaries
 GO_PACKAGE_LIST=$(shell cd $(CURDIR)/src; go list ./...)
 GO_CMD_LIST=$(shell cd $(CURDIR)/src/cmd; go list ./...)
@@ -17,6 +19,13 @@ build:
 	@cd $(CURDIR)/src; go mod tidy; cd $(CURDIR)
 	@for cmd in $(GO_CMD_LIST); do \
 		bin_path=$(GOBIN)/`/usr/bin/basename $$cmd`; \
+		cd $(CURDIR)/src;CGO_ENABLED=0 GOOS=linux go build -o $$bin_path $$cmd; cd $(CURDIR); \
+	done
+
+build-osx:
+	@cd $(CURDIR)/src; go mod tidy; cd $(CURDIR)
+	@for cmd in $(GO_CMD_LIST); do \
+		bin_path=$(GOBIN)/osx/`/usr/bin/basename $$cmd`; \
 		cd $(CURDIR)/src;CGO_ENABLED=0 go build -o $$bin_path $$cmd; cd $(CURDIR); \
 	done
 
@@ -39,11 +48,13 @@ protobuf:
 all:
 	@$(MAKE) -w protobuf
 	@$(MAKE) -w build
+	@$(MAKE) -w build-osx
 	@$(MAKE) -w fmt
 
 # cleans up existing Go binaries if any
 clean:
 	-rm -rf $(GOBIN)
+	-rm -rf $(GOBIN)/osx
 
 # unit test target
 test:
@@ -51,5 +62,9 @@ test:
 	@for package in $(GO_PACKAGE_LIST); do \
 		cd $(CURDIR)/src; go test -v $$package -test_dir='$(CURDIR)/testout'; cd $(CURDIR); \
 	done
+
+docker:
+	@$(MAKE) -w all
+	@sudo docker build -t test_service .
 
 	
