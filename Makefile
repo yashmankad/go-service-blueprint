@@ -29,12 +29,6 @@ build-osx:
 		cd $(CURDIR)/src;CGO_ENABLED=0 go build -o $$bin_path $$cmd; cd $(CURDIR); \
 	done
 
-# formats all Go files and packages using 'go fmt'
-fmt:
-	@for package in $(GO_PACKAGE_LIST); do \
-		cd $(CURDIR)/src; go fmt $$package; cd $(CURDIR); \
-	done
-
 # builds protocol buffer definitions and generates Go bindings for them
 protobuf:
 	@go get -u github.com/golang/protobuf/protoc-gen-go
@@ -44,11 +38,20 @@ protobuf:
 		protoc -I=./src/protobuf --go_out=./src/protobuf/generated --go-grpc_out=./src/protobuf/generated $$protofile; \
 	done
 
+# vet examines Go source code for suspicious constructs that might have been missed by the compiler
+vet:
+	cd $(CURDIR)/src; go vet $(GO_PACKAGE_LIST); cd $(CURDIR)
+
+# formats all Go files and packages using 'go fmt'
+fmt:
+	cd $(CURDIR)/src; go fmt $(GO_PACKAGE_LIST); cd $(CURDIR);
+
 # builds everything - protocol buffers, Go binaries and formats the code
 all:
 	@$(MAKE) -w protobuf
 	@$(MAKE) -w build
 	@$(MAKE) -w build-osx
+	@$(MAKE) -w vet
 	@$(MAKE) -w fmt
 
 # cleans up existing Go binaries if any
