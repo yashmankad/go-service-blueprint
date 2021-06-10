@@ -5,14 +5,17 @@ syntax = "proto3";
 package test_service;
 option go_package = "./";
 
+// PingRequest is the request body used by clients for the ping API endpoint
 message PingRequest {
     // empty request
 }
 
+// PingResponse is the response from server for the ping API endpoint
 message PingResponse {
     string message = 1;
 }
 
+// TestServiceRPC is the RPC service hosted by this service
 service TestServiceRPC {
     rpc Ping(PingRequest) returns (PingResponse) {}
 }

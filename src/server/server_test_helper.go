@@ -16,16 +16,17 @@ import (
 	"test_service/util"
 )
 
-// server helper object is mainly used by Go unit tests
+// ServerHelper object is mainly used by Go unit tests
 // it contains the server object and other mock objects to test a service out
 type ServerHelper struct {
 	// server object
 	server *Server
 
-	// keep track of any go routines created as part of the test
+	// wg keeps track of any go routines created as part of the test
 	wg *sync.WaitGroup
 }
 
+// NewServerTestHelper create a new server instance for unit testing
 func NewServerTestHelper(testObj *util.Test) (*ServerHelper, error) {
 	serviceName := "test_service"
 
@@ -80,6 +81,7 @@ func NewServerTestHelper(testObj *util.Test) (*ServerHelper, error) {
 		wg:     &wg}, nil
 }
 
+// CloseServerTestHelper closes the test server instance gracefully
 func (sh *ServerHelper) CloseServerTestHelper() {
 	sh.server.Close()
 	sh.wg.Wait()
@@ -87,6 +89,7 @@ func (sh *ServerHelper) CloseServerTestHelper() {
 	// XXX: close other mock interfaces if created during server init
 }
 
+// waitForAPIServer waits until the API server has been initialized by the server
 func waitForAPIServer(timeout time.Duration) error {
 	log.Info("checking api server availability")
 	deadline := time.Now().Add(timeout)

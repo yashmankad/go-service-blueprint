@@ -14,6 +14,7 @@ import (
 	"test_service/v1api"
 )
 
+// TestServer unit tests basic server bringup and basic connectivity to service instance via API/RPC server, etc
 func TestServer(test *testing.T) {
 	// initialize test object
 	testObj, err := util.TestInit("test-service")

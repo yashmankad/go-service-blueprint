@@ -24,6 +24,7 @@ import (
 
 // globals
 var (
+	// logLevels helps map the user's requested logging level to the logger used
 	logLevels = map[string]log.Level{
 		"trace": log.TraceLevel,
 		"debug": log.DebugLevel,
@@ -68,14 +69,13 @@ type Server struct {
 	// XXX: add connection objects for databases, kvstores, queues, etc
 }
 
-// initializes a new server object
+// NewServer initializes a new server object
 // the object also contains a context logger to log with additional service context
 func NewServer(config *proto.Config) (*Server, error) {
 	// print the config before using it to initialize the server
 	log.Infof("service config: %v", config)
 
 	serverObj := &Server{Config: config}
-
 	if err := serverObj.configureLogger(); err != nil {
 		log.Errorf("failed to initialize logger")
 		return nil, err
@@ -84,7 +84,7 @@ func NewServer(config *proto.Config) (*Server, error) {
 	return serverObj, nil
 }
 
-// starts the server. as part of the process we initialize connections to
+// Run the server. as part of the process we initialize connections to
 // datastore, KV stores and also spin up a REST/RPC server
 func (s *Server) Run() error {
 	s.serverLock.Lock()
@@ -116,7 +116,7 @@ func (s *Server) Run() error {
 	return nil
 }
 
-// gracefully close a server connection and stop the service instance
+// Close a server connection gracefully and stop the service instance
 // best effort...currently does not return any error
 func (s *Server) Close() error {
 	s.running = false
@@ -136,7 +136,7 @@ func (s *Server) Close() error {
 	return nil
 }
 
-// waits for the server to come up. returns error if server does not boot up within the requested timeout
+// WaitForServerBootup is a utility that helps clients wait before issuing requests against the server
 func (s *Server) WaitForServerBootup(timeout time.Duration) error {
 	currTime := time.Now()
 	endTime := currTime.Add(timeout)
@@ -151,13 +151,13 @@ func (s *Server) WaitForServerBootup(timeout time.Duration) error {
 	return fmt.Errorf("server bootup timed out")
 }
 
-// initializes connections to datastore, KV store, queues, etc
+// initialize will setup connections from the server to external systems like datastore, KV store, queues, etc
 func (s *Server) initialize() error {
 	// XXX: initialize other connection objects like datastore, kvstore and queues
 	return nil
 }
 
-// initializes and starts a REST API server
+// goRunAPIServer initializes the server's REST API server in the form of a Go routine
 func (s *Server) goRunAPIServer() {
 	defer s.wg.Done()
 
@@ -188,7 +188,7 @@ func (s *Server) goRunAPIServer() {
 	}
 }
 
-// starts an RPC server for incoming requests on port requested in service config
+// goRunRPCServer initializes the server's RPC server in the form of a Go routine
 func (s *Server) goRunRPCServer() {
 	s.wg.Done()
 	listener, err := net.Listen("tcp", "localhost:"+s.Config.Service.RpcPort)
@@ -206,7 +206,7 @@ func (s *Server) goRunRPCServer() {
 	}
 }
 
-// configure logging parameters for the server/service
+// configureLogger initializes the logging parameters for the server/service
 func (s *Server) configureLogger() error {
 	// if log directory does not exist, create it
 	logDir := s.Config.Logging.LogDir
@@ -257,7 +257,7 @@ func (s *Server) configureLogger() error {
 	return nil
 }
 
-// safely fetch current server status
+// getServerStatus safely fetches current server status (running vs. otherwise)
 func (s *Server) getServerStatus() bool {
 	s.serverLock.Lock()
 	status := s.running

@@ -9,7 +9,7 @@ import (
 	"test_service/v1api"
 )
 
-// initializes a new API router based on Gin
+// NewRouter initializes a new API router based on Gin
 // also registers API endpoints and their handlers with the router
 func NewRouter(fh *os.File) (*gin.Engine, error) {
 	// write API logs to the server's logfile

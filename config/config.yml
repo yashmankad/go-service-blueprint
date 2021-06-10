@@ -7,7 +7,7 @@ logging:
   logDir: ""
   logFile: "test_service.log"
   loggingLevel: "info"
-sql_db:
+datastore:
   fqdnOrIP: "127.0.0.1"
   port: "5432"
   username: "postgres"

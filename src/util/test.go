@@ -14,15 +14,16 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-// test object definition
+// Test object used during unit tests
 type Test struct {
 	// directory for test logs
 	TestDir string
 }
 
-// globals
+// testDir where unit test logs will be written
 var testDir = flag.String("test_dir", "", "Directory for test files and logs")
 
+// TestInit initializes the unit test object
 func TestInit(testName string) (*Test, error) {
 	// test logs get written to the requested <testDir>/<testcase-name-randomId>
 	// if the requested testDir is empty we place the logs under $HOMEDIR/testout/<testcase-name-randomId>
@@ -40,7 +41,7 @@ func TestInit(testName string) (*Test, error) {
 	return &Test{TestDir: *testDir}, nil
 }
 
-// cleans up the test env, including logs if the test was successful
+// TestCleanup cleans up any test artifacts and logs (if the test was successful)
 func (t *Test) TestCleanup(test *testing.T) {
 	if !test.Failed() {
 		if err := os.RemoveAll(t.TestDir); err != nil {

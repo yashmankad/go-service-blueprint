@@ -5,84 +5,84 @@ syntax = "proto3";
 package test_service;
 option go_package = "./";
 
-// Service config definition
+// Config object for the service
 message Config {
-    // defines service properties name, logging and REST/RPC endpoints
+    // service related properties like name, logging and REST/RPC endpoints
     ServiceConfig service = 1;
 
-    // service logging config
+    // logging config (log dir, file, logging level)
     LoggingConfig logging = 2;
 
-    // configuration for the service to connect to a SQL datastore (connect string, username, password)
-    SQLDbConfig sql_db = 3;
+    // datastore or repository configuration (connect string, username, password)
+    DatastoreConfig datastore = 3;
 
-    // configuration for the service to connect to a KV store
+    // kvstore configuration similar to datastore
     KVStoreConfig kvstore = 4;
 
-    // configuration for this specific service instance (uuid, hostname, ip) 
+    // host configuration for this specific service instance (uuid, hostname, ip) 
     HostConfig host = 5;
 }
 
-// Service configuration
+// ServiceConfig configuration hold generic config details for the service
 message ServiceConfig {
-    // service name
+    // name represents the service name
     string name = 1;
 
-    // service hostname (DNS name) or IP
+    // fqdnOrIP is service hostname (DNS name) or IP
     string fqdnOrIP = 2;
 
-    // port where the service listens for incoming REST API requests
+    // apiPort is the port where the service listens for incoming REST API requests
     string apiPort = 3;
 
-    // port where the service listens for incoming RPC requests
+    // rpcPort represents the port where service listens for incoming RPC requests
     string rpcPort = 4;
 }
 
-// Logging configuration for service
+// LoggingConfig holds logging details for the service
 message LoggingConfig {
-    // path to logs directory
+    // logDir that holds service logs
     string logDir = 1;
 
-    // log file name
+    // logFile is the name of the log file
     string logFile = 2;
 
-    // logging level (debug, info, error, fatal, etc)
+    // loggingLevel for the service (debug, info, error, fatal, etc)
     string loggingLevel = 3;
 }
 
-// Configuration to connect to a SQL store
-message SQLDbConfig {
-    // db hostname (DNS name) or IP
+// DatastoreConfig to connect to the repository
+message DatastoreConfig {
+    // fqdnOrIP of the database server for connection purpose
     string fqdnOrIP = 1;
 
-    // port where the db listens for incoming request
+    // port where database server listens for incoming requests
     string port = 2;
 
-    // database username
+    // username of database
     string username = 3;
 
-    // database password
+    // password of database
     string password = 4;
 
-    // name of database to access
-    string db_name = 5;
+    // dbName is the name of the database to access
+    string dbName = 5;
 }
 
-// Configuration to connect to a KV store
+// KVStoreConfig to connect to a KV store
 message KVStoreConfig {
-    // kvstore hostname (DNS name) or IP
+    // fqdnOrIP of the kv store for connection purpose
     string fqdnOrIP = 1;
 
-    // port where the kvstore listens for incoming request
+    // port where kv store listens for incoming requests
     string port = 2;
 }
 
-// Configuration related to this specific service instance
+// HostConfig holds configuration related to a specific service instance/host
 message HostConfig {
     // uuid for this service instance
     string uuid = 1;
 
-    // unique instance name for this service instance (need not be FQDN)
-    string instance_name = 2;
+    // instanceName represents the name of the service instance (need not be FQDN)
+    string instanceName = 2;
 }
 

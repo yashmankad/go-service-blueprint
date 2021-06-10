@@ -13,6 +13,7 @@ import (
 
 // globals
 var (
+	// configPath of service config
 	configPath = flag.String("c", "config.yml", "Path to service config")
 )
 

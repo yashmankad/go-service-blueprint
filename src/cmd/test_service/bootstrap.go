@@ -16,7 +16,7 @@ import (
 	"test_service/server"
 )
 
-// bootstraps the service during bootup
+// bootstrap the service during bootup
 // initializes service config and logger module
 // translates service config to its proto definition and return
 func bootstrap(configPath string) (*proto.Config, error) {
@@ -51,7 +51,7 @@ func bootstrap(configPath string) (*proto.Config, error) {
 	return protoConfig, nil
 }
 
-// extract config from request config file (yaml) and provided flags
+// getConfig extracts config from service config file (yml) and provided flags
 func getConfig(path string) (*server.Config, error) {
 	var config server.Config
 	if path == "" {

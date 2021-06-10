@@ -8,11 +8,12 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// PingResponse is the server response for the ping API endpoint
 type PingResponse struct {
 	Message string `json:"message"`
 }
 
-// test API to verify http router and REST capabilities
+// Ping API endpoint handler to verify server's REST capabilities
 func Ping(c *gin.Context) {
 	var response PingResponse
 	response.Message = "pong"
