@@ -242,6 +242,7 @@ func (s *Server) configureLogger() error {
 	log.SetFormatter(&log.TextFormatter{
 		FullTimestamp: true,
 	})
+	log.SetFormatter(&log.JSONFormatter{})
 
 	// create a logger object that logs with added context (instanceName, ip, etc)
 	contextLogger := log.WithFields(log.Fields{

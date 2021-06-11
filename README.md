@@ -19,7 +19,7 @@ API and RPC servers are created asynchronously as part of server bringup and ini
 
 ## Logging
 
-The framework leverages the popular [**logrus**](https://github.com/sirupsen/logrus) Go package for logging all service logs, events and requests to the directory and file requested in the service configuration. 
+The framework leverages [**logrus**](https://github.com/sirupsen/logrus) Go package for logging all service logs, events and requests to the directory and file requested in the service configuration. Logs are written in JSON format for purposes of aggregation and parsing later on.
 
 ## Cross Language Support
 
@@ -27,7 +27,7 @@ We lean on defining all essential request/response objects in the form of [**pro
 
 ## Unit Test Framework
 
-The blueprint uses ```go test``` to develop and run unit tests for all packages.
+The blueprint uses ```go test``` to develop and run unit tests for all packages. ```make test``` will run testcases in all packages.
 
 ## Deployment
 

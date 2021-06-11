@@ -40,11 +40,11 @@ protobuf:
 
 # vet examines Go source code for suspicious constructs that might have been missed by the compiler
 vet:
-	cd $(CURDIR)/src; go vet $(GO_PACKAGE_LIST); cd $(CURDIR)
+	@cd $(CURDIR)/src; go vet $(GO_PACKAGE_LIST); cd $(CURDIR)
 
 # formats all Go files and packages using 'go fmt'
 fmt:
-	cd $(CURDIR)/src; go fmt $(GO_PACKAGE_LIST); cd $(CURDIR);
+	@cd $(CURDIR)/src; go fmt $(GO_PACKAGE_LIST); cd $(CURDIR);
 
 # builds everything - protocol buffers, Go binaries and formats the code
 all:
