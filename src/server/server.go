@@ -26,7 +26,6 @@ import (
 var (
 	// logLevels helps map the user's requested logging level to the logger used
 	logLevels = map[string]log.Level{
-		"trace": log.TraceLevel,
 		"debug": log.DebugLevel,
 		"info":  log.InfoLevel,
 		"warn":  log.WarnLevel,

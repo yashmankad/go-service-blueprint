@@ -4,6 +4,10 @@ pkg
 testoutput
 tmp
 
+# imported Go modules (third party)
+src/github.com/*
+src/google.golang.org/*
+
 # auto generated files
 src/protobuf/generated
 
