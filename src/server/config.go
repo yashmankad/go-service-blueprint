@@ -44,7 +44,7 @@ type Config struct {
 		Password string `yaml:"password"`
 
 		// DBName represents the database name where data is stored
-		DBName string `yaml:"dbName"`
+		DbName string `yaml:"dbName"`
 	} `yaml:"datastore"`
 
 	// KVStore configuration

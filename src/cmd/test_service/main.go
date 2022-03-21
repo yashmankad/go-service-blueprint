@@ -14,7 +14,7 @@ import (
 // globals
 var (
 	// configPath of service config
-	configPath = flag.String("c", "config.yml", "Path to service config")
+	configPath = flag.String("c", "config.yaml", "Path to service config")
 )
 
 // main routine for the service

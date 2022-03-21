@@ -46,6 +46,13 @@ func bootstrap(configPath string) (*proto.Config, error) {
 			Uuid:         uuid.New().String(),
 			InstanceName: instanceName,
 		},
+		Datastore: &proto.DatastoreConfig{
+			FqdnOrIP: config.Datastore.FqdnOrIP,
+			Port:     config.Datastore.Port,
+			Username: config.Datastore.Username,
+			Password: config.Datastore.Password,
+			DbName:   config.Datastore.DbName,
+		},
 	}
 
 	return protoConfig, nil

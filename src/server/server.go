@@ -19,6 +19,7 @@ import (
 	"google.golang.org/grpc"
 
 	proto "test_service/protobuf/generated"
+	"test_service/repository"
 	"test_service/router"
 )
 
@@ -65,7 +66,10 @@ type Server struct {
 	// XXX: needed due to some quirky grpc behavior (https://github.com/grpc/grpc-go/issues/3794)
 	proto.UnimplementedTestServiceRPCServer
 
-	// XXX: add connection objects for databases, kvstores, queues, etc
+	// repository object (includes conn object to the db/repo)
+	Repository *repository.Repository
+
+	// XXX: add connection objects for kvstores, queues, etc
 }
 
 // NewServer initializes a new server object
@@ -132,6 +136,16 @@ func (s *Server) Close() error {
 	// stop the grpc server
 	s.RpcSrvr.Stop()
 
+	// close db conn
+	// gorm supports connection pooling so you should only close this connection
+	// if all consumers are done with it
+	if s.Repository != nil {
+		sqlDB, _ := s.Repository.DbConn.DB()
+		if sqlDB != nil {
+			sqlDB.Close()
+		}
+	}
+
 	return nil
 }
 
@@ -152,7 +166,29 @@ func (s *Server) WaitForServerBootup(timeout time.Duration) error {
 
 // initialize will setup connections from the server to external systems like datastore, KV store, queues, etc
 func (s *Server) initialize() error {
-	// XXX: initialize other connection objects like datastore, kvstore and queues
+	// comment out DB initialization since the template is not pointing to a valid DB (init will fail)
+	// START BLOCK
+	// initialize db connection
+	/*
+		if err := s.initializeDbConn(); err != nil {
+			s.ContextLogger.Errorf("failed to initialize repository connection: %v", err)
+			return err
+		}
+	*/
+	// END BLOCK
+
+	// XXX: initialize other connection objects like kvstore and queues
+	return nil
+}
+
+func (s *Server) initializeDbConn() error {
+	repoConn, err := repository.NewRepository(s.Config.Datastore)
+	if err != nil {
+		return err
+	}
+
+	s.ContextLogger.Infof("repository connection initialized successfully")
+	s.Repository = repoConn
 	return nil
 }
 
@@ -160,7 +196,7 @@ func (s *Server) initialize() error {
 func (s *Server) goRunAPIServer() {
 	defer s.wg.Done()
 
-	r, err := router.NewRouter(s.LogFileHandle)
+	r, err := router.NewRouter(s.LogFileHandle, s.Repository, s.ContextLogger)
 	if err != nil {
 		s.ContextLogger.Error("failed to initialize api router")
 		s.wg.Done()
